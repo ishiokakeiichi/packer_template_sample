@@ -1,0 +1,57 @@
+{
+	"builders" : [
+		{
+			"type" : "virtualbox-iso",
+			"ssh_pty": true,
+			"vm_name": "CentOS6.4-x86_minimal",
+			"boot_wait": "5s",
+			"disk_size": 512000,
+			"guest_os_type": "RedHat_64",
+			"iso_checksum": "9381a24b8bee2fed0c26896141a64b69",
+			"iso_checksum_type": "md5",
+			"iso_url": "http://ftp.iij.ad.jp/pub/linux/centos/6.7/isos/x86_64/CentOS-6.7-x86_64-minimal.iso",
+			"ssh_username": "vagrant",
+			"ssh_password": "vagrant",
+			"ssh_port": 22,
+			"ssh_wait_timeout": "10000s",
+			"shutdown_command": "echo 'vagrant'|sudo -S shutdown -P now",
+			"guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+			"virtualbox_version_file": ".vbox_version",
+			"vboxmanage": [
+				[ "modifyvm", "{{.Name}}", "--memory", "512" ],
+				[ "modifyvm", "{{.Name}}", "--cpus", "1" ]
+			],
+			"http_directory": "./packer/builders/",
+			"boot_command": [
+				"<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+			]
+		}
+	],
+	"provisioners": [
+		{
+			"type": "shell",
+			"environment_vars": [
+				"INSTALL_VAGRANT_KEY=1",
+				"SSH_USERNAME=vagrant",
+				"SSH_PASSWORD=vagrant"
+				],
+			"execute_command": "echo 'vagrant' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+			"scripts": [
+				"packer/provisioners/base.sh",
+				"packer/provisioners/vagrant.sh",
+				"packer/provisioners/virtualbox.sh"
+			],
+			"override": {
+				"virtualbox-iso": {
+					"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'"
+				}
+			}
+		}
+	],
+	"post-processors": [
+		{
+			"type": "vagrant",
+			"output": "./packer/vagrant-boxes/CentOS-6.7-x86_64-minimal.box"
+		}
+	]
+}
