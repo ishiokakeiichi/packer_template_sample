@@ -1,4 +1,9 @@
 {
+	"variables" : {
+		"http_proxy"        : "",
+		"https_proxy"       : "",
+		"no_proxy"          : "{{env `no_proxy`}}"
+	},
 	"builders" : [
 		{
 			"type" : "virtualbox-iso",
@@ -23,7 +28,7 @@
 			],
 			"http_directory": "./packer/builders/",
 			"boot_command": [
-				"<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+				"<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg <enter><wait>"
 			]
 		}
 	],
@@ -33,19 +38,16 @@
 			"environment_vars": [
 				"INSTALL_VAGRANT_KEY=1",
 				"SSH_USERNAME=vagrant",
-				"SSH_PASSWORD=vagrant"
+				"SSH_PASSWORD=vagrant",
+				"http_proxy={{user `http_proxy`}}",
+				"https_proxy={{user `https_proxy`}}"
 				],
-			"execute_command": "echo 'vagrant' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+			"execute_command": "export http_proxy='{{user `http_proxy`}}'; export https_proxy={{user `https_proxy`}}; echo 'vagrant' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
 			"scripts": [
 				"packer/provisioners/base.sh",
 				"packer/provisioners/vagrant.sh",
 				"packer/provisioners/virtualbox.sh"
-			],
-			"override": {
-				"virtualbox-iso": {
-					"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'"
-				}
-			}
+			]
 		}
 	],
 	"post-processors": [
